@@ -24,27 +24,26 @@ class Crawler():
         self.prefix_twse_idx = prefix_twse_idx
         ''' Check the original TWSE_IDX file is exist '''
         if not isfile('{}.csv'.format(self.prefix_twse_idx)):
-            print 'File {}.csv lost, please check!!!\r'.format(self.prefix_twse_idx)
+            print('File {}.csv lost, please check!!!\r'.format(self.prefix_twse_idx))
             quit()
 
     def process(self, date, total, count):
-        print "Crawling @ " + "%15s " % date,
-        print "[%3d"%(count*100/total) + "%]\r",
+        print("Crawling @ " + "%15s " % date, end="")
+        print("[%3d"%(count*100/total) + "%]\r", end="")
 
     def _clean_row(self, row):
         ''' Clean comma and spaces '''
         for index, content in enumerate(row):
             row[index] = re.sub(",", "", content.strip())
-            row[index] = filter(lambda x: x in string.printable, row[index])
+            row[index] = ''.join(filter(lambda x: x in string.printable, row[index]))
         return row
 
     def _twse_idx_record(self, row):
         ''' Save row to csv file '''
         if (os.path.isfile('{}.csv'.format(self.prefix_twse_idx))):
-            f = open('{}.csv'.format(self.prefix_twse_idx), 'ab')
-            cw = csv.writer(f, lineterminator='\r\n')
-            cw.writerow(row)
-            f.close()
+            with open('{}.csv'.format(self.prefix_twse_idx), 'a', newline='') as f:
+                cw = csv.writer(f)
+                cw.writerow(row)
 
     def _get_twse_idx_data(self, date_str): 
         global last_date_of_file
@@ -109,18 +108,16 @@ class Crawler():
 
 
     def get_last_date(self):
-        with open('./{}.csv'.format(self.prefix_twse_idx), 'rb') as file:
+        with open('./{}.csv'.format(self.prefix_twse_idx), 'r', newline='') as file:
             reader = csv.reader(file)
             rows = 0
             for row in reader:
                 rows += 1
-        file.close()
         return row[0]
 
 def main():
 
     global last_date_of_file
-    global total_days_to_crawl
     
     # Set logging
     if not os.path.isdir('log'):
@@ -139,7 +136,7 @@ def main():
     # Crawl data
     # TWSE-Volume first day is 1990/01
     # TWSE-Index first day is 1999/01
-    print '***** Crawling TWSE index and volume *****'
+    print('***** Crawling TWSE index and volume *****')
 
     # update TWSE index data till today 
 
@@ -157,9 +154,9 @@ def main():
     #first_day = datetime(int(1999), int(3), int(31))
     
     if last_day.strftime('%Y/%m/%d') == first_day.strftime('%Y/%m/%d'):
-        print 'your data is up-to-date'
+        print('your data is up-to-date')
     else:
-        print 'updating data from '+last_day.strftime('%Y/%m/%d')+' to '+first_day.strftime('%Y/%m/%d')+'...'
+        print('updating data from '+last_day.strftime('%Y/%m/%d')+' to '+first_day.strftime('%Y/%m/%d')+'...')
         max_error = 5
         error_times = 0
         month_counts = 1 
@@ -185,10 +182,11 @@ def main():
                 #first_day -= timedelta(1) #from now to past
                 last_day += timedelta(1) #from past till now
 
-        print ''
-        print "done!"        
-        print ''
+        print('')
+        print("done!")        
+        print('')
         os.system('python create_twse_momentum_xlsx.py')
 
 if __name__ == '__main__':
     main()
+

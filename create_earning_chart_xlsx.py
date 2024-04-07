@@ -16,7 +16,7 @@ OTC_RAW_DATA_FOLDER = 'otc_earning_raw_data'
 OUTPUT_CHART_FILE = 'tse_otc_earning_chart.xlsx'
 TOTAL_YEARS = 4 
 
-Q4 = np.array([0,0,0],np.int) 
+Q4 = np.array([0,0,0], int) 
 
 def formula(worksheet):
 
@@ -26,7 +26,7 @@ def formula(worksheet):
     col_init = 0
     row_end = TOTAL_DAYS + 1 
 
-    for row in range(5,row_end,1):
+    for row in range(5, row_end, 1):
         #current row value
         col_B = xl_rowcol_to_cell(row, 1)
         col_C = xl_rowcol_to_cell(row, 2)
@@ -93,497 +93,141 @@ def chart_trend(market, spreadbook, worksheet, start_year, stock_count_row):
         'name':       '=%s!$B7'%(market),
         'categories': '=%s!$C$1:$%c$1'%(market, last_col_chr),
         'values':     '=%s!$C$%s:$%c$%s'%(market,eps , last_col_chr, eps),
-        'y2_axis':    True,
+        'y2_axis':    1,
     })
 
-    '''    
+    line_yoy_chart.add_series({
+        'name':       'YoY% - 營收',
+        'categories': '=%s!$C$1:$%c$1'%(market, last_col_chr),
+        'values':     '=%s!$C$%s:$%c$%s'%(market, revenue+3 , last_col_chr, revenue+3),
+    })
+    line_yoy_chart.add_series({
+        'name':       'YoY% - 營益',
+        'categories': '=%s!$C$1:$%c$1'%(market, last_col_chr),
+        'values':     '=%s!$C$%s:$%c$%s'%(market, o_profit+3 , last_col_chr, o_profit+3),
+    })
+    line_yoy_chart.add_series({
+        'name':       'YoY% - EPS',
+        'categories': '=%s!$C$1:$%c$1'%(market, last_col_chr),
+        'values':     '=%s!$C$%s:$%c$%s'%(market, eps+3 , last_col_chr, eps+3),
+    })
+
+    # EPS, YoY%
+    bar_yoy_eps_chart.add_series({
+        'name':       'YoY% - EPS',
+        'categories': '=%s!$C$1:$%c$1'%(market, last_col_chr),
+        'values':     '=%s!$C$%s:$%c$%s'%(market, eps+3 , last_col_chr, eps+3),
+    })
+
     #毛利率
-    bar_chart.add_series({
-        'name':       '=%s!$B4'%('TSE'),
-        'categories': '=%s!$C$1:$%c$1'%('TSE', last_col_chr),
-        'values':     '=%s!$C$%s:$%c$%s'%('TSE',profit_m, last_col_chr, profit_m),
-        'y2_axis':    True,
+    bar_yoy_p_chart.add_series({
+        'name':       '=%s!$B4'%(market),
+        'categories': '=%s!$C$1:$%c$1'%(market, last_col_chr),
+        'values':     '=%s!$C$%s:$%c$%s'%(market, profit_m, last_col_chr, profit_m),
     })
     #營益率
-    bar_chart.add_series({
-        'name':       '=%s!$B6'%('TSE'),
-        'categories': '=%s!$C$1:$%c$1'%('TSE', last_col_chr),
-        'values':     '=%s!$C$%s:$%c$%s'%('TSE',o_profit_m, last_col_chr, o_profit_m),
-        'y2_axis':    True,
+    bar_yoy_op_chart.add_series({
+        'name':       '=%s!$B6'%(market),
+        'categories': '=%s!$C$1:$%c$1'%(market, last_col_chr),
+        'values':     '=%s!$C$%s:$%c$%s'%(market, o_profit_m, last_col_chr, o_profit_m),
     })
-    '''    
 
-    for q in range(1,5):
-        # 毛利率(YOY)
-        bar_yoy_p_chart.add_series({
-            'name':       '%s'%(start_year+q-1),
-            'categories': '={"Q1","Q2","Q3","Q4"}',
-            'values':     '=%s!$%c$%s:$%c$%s'%(market, chr(ord('C')+(q-1)*4), profit_m, chr(ord('C')+(q*4-1)), profit_m),
-        })
-        # 營益率(YOY)
-        bar_yoy_op_chart.add_series({
-            'name':       '%s'%(start_year+q-1),
-            'categories': '={"Q1","Q2","Q3","Q4"}',
-            'values':     '=%s!$%c$%s:$%c$%s'%(market, chr(ord('C')+(q-1)*4), o_profit_m, chr(ord('C')+(q*4-1)), o_profit_m),
-        })
-        # eps (YOY)
-        bar_yoy_eps_chart.add_series({
-            'name':       '%s'%(start_year+q-1),
-            'categories': '={"Q1","Q2","Q3","Q4"}',
-            'values':     '=%s!$%c$%s:$%c$%s'%(market, chr(ord('C')+(q-1)*4), eps, chr(ord('C')+(q*4-1)), eps),
-        })
+    worksheet.insert_chart('A%d'%(stock_count_row+8), line_chart)
+    worksheet.insert_chart('A%d'%(stock_count_row+20), bar_chart)
+    worksheet.insert_chart('A%d'%(stock_count_row+32), line_yoy_chart)
+    worksheet.insert_chart('A%d'%(stock_count_row+44), bar_yoy_p_chart)
+    worksheet.insert_chart('A%d'%(stock_count_row+56), bar_yoy_op_chart)
+    worksheet.insert_chart('A%d'%(stock_count_row+68), bar_yoy_eps_chart)
 
-
-    ## chart characteristic 
-    #line_chart.set_title({'name': u'損益表 '})
-    line_chart.set_size({'width': 510, 'height': 145})
-    line_chart.set_legend({'position': 'right'}) #圖例註釋
-    line_chart.set_y_axis({ 
-        'name': u'(百萬)',
-        'display_units': 'thousands', 
-        'display_units_visible': False, 
-    })
-    line_chart.set_x_axis({
-       #'name': 'date',
-        'interval_unit': 4,
-    })
-    bar_chart.set_style(13)
-    bar_yoy_p_chart.set_y_axis({'num_format': '0%'})
-    bar_yoy_p_chart.set_size({'width': 315, 'height': 145})
-    #bar_yoy_p_chart.set_title({'name': u'毛利率', 'overlay': True,})
-    bar_yoy_op_chart.set_y_axis({'num_format': '0%'})
-    bar_yoy_op_chart.set_size({'width': 315, 'height': 145})
-    #bar_yoy_op_chart.set_title({'name': u'營益率', 'overlay': True,})
-    bar_yoy_eps_chart.set_y_axis({'num_format': '0.00'})
-    bar_yoy_eps_chart.set_size({'width': 315, 'height': 145})
-    #bar_yoy_eps_chart.set_title({'name': 'EPS', 'overlay': True,})
-
-    line_chart.combine(bar_chart)
-    worksheet.insert_chart(stock_count_row+1, TOTAL_YEARS*4+3, line_chart) #display chart at specific location
-    worksheet.insert_chart(stock_count_row+1, TOTAL_YEARS*4+11, bar_yoy_p_chart) #display chart at specific location
-    worksheet.insert_chart(stock_count_row+1, TOTAL_YEARS*4+16, bar_yoy_op_chart) #display chart at specific location
-    worksheet.insert_chart(stock_count_row+1, TOTAL_YEARS*4+21, bar_yoy_eps_chart) #display chart at specific location
-
-def merge_data(worksheet, worksheet_yoy, f_name, start_year, start_row):
-
-    global TSE_RAW_DATA_FOLDER
-    global OTC_RAW_DATA_FOLDER
-    global Q4
-
-    QUARTER = 4
-    Q4 = 0
-    col_init = 2  # start to fill data at column 2
-    col_init_yoy = 2  
-    col_init_yoy_num = 0
-    col_init_shift = 0  # if 1st raw data of date is after start_year
-
-    count = 0
-    start_to_fetch = False
-    first_raw_data_date = ['year', 'quarter']
-    start_fetch_date = [start_year, '1']
-    csv_rows_tmp = []
-
-    (f_short_name, f_extension) = os.path.splitext(f_name)
-    if (worksheet.get_name() == 'TSE'):
-        spamReader = csv.reader(open('{}/{}'.format(TSE_RAW_DATA_FOLDER, f_name), 'rb'), delimiter=',',quotechar='"')
-    else:
-        spamReader = csv.reader(open('{}/{}'.format(OTC_RAW_DATA_FOLDER, f_name), 'rb'), delimiter=',',quotechar='"')
-
-
-    ## read data to memory and filter out invalid data
-    for row in spamReader:
-        count += 1
-        if count > 2:   #row 1 and 2 are headers, ignore it
-            csv_rows_tmp.append(row)
-
-    ## data to be fetched on which date (if 1st raw-data date is after start_year)
-    first_raw_data_date = [csv_rows_tmp[0][0][:4], csv_rows_tmp[0][0][-1]]
-
-    if int(first_raw_data_date[0]) > start_year:
-        col_init_shift = (int(first_raw_data_date[0]) - start_year) * 4 + int(first_raw_data_date[1]) - 1
-        start_fetch_date[0] = first_raw_data_date[0]
-        if int(first_raw_data_date[1]) > 1:
-            start_fetch_date[1] = first_raw_data_date[1]
-
-    col_init += col_init_shift
-    count = int(start_fetch_date[1]) - 1
-    col_init_yoy += int(start_fetch_date[0]) - start_year
-    col_init_yoy_num = col_init_yoy + 4 * count
-
-    ## write data to worksheet
-    for row in csv_rows_tmp:
-
-        if (row[0] == "%s Q%s"%(start_fetch_date[0], start_fetch_date[1])) or (start_to_fetch == True):
-            start_to_fetch = True 
-
-            # RAW data for Q4 means a whole year, modify to Q4 = Q4 - (Q1 ~ Q3) 
-            if (row[0] == "%s Q4"%(start_fetch_date[0])):
-                if (row[1] != 'n/a'):
-                    tmp = np.array([int(row[1]),int(row[3]),int(row[5])])
-                    Q4 = tmp - Q4 
-                    #print Q4
-                    row[1] = Q4[0] # 營收
-                    row[3] = Q4[1] # 毛利
-                    row[5] = Q4[2] # 營益
-                start_fetch_date[0] = int(start_fetch_date[0]) + 1
-                Q4 = 0
-            else:
-                if (row[1] == 'n/a'):
-                    #tmp = np.zeros((3,), dtype=np.int)
-                    tmp = 0
-                else:
-                    tmp = np.array([int(row[1]),int(row[3]),int(row[5])])
-                Q4 = Q4 + tmp 
-
-            # write data to worksheet
-            if (row[1] != 'n/a'):
-                worksheet.write_number((start_row*6)+1, col_init, int(row[1])) # 營收
-                worksheet.write_number((start_row*6)+2, col_init, int(row[3])) # 毛利
-                if (row[1] == '0' or row[1] == 0):
-                    worksheet.write_number((start_row*6)+3, col_init, 0) # 毛利率
-                    worksheet.write_number((start_row*6)+5, col_init, 0) # 營益率
-                else:
-                    worksheet.write((start_row*6)+3, col_init, float(row[3])/float(row[1])) # 毛利率
-                    worksheet.write((start_row*6)+5, col_init, float(row[5])/float(row[1])) # 營益率
-                worksheet.write_number((start_row*6)+4, col_init, int(row[5])) # 營益
-                worksheet.write_number((start_row*6)+6, col_init, float('%1.2f'%(float(row[5])/(float(row[9])/10)))) # 營益的EPS
-                col_init +=1
-            else:
-                worksheet.write((start_row*6)+1, col_init, 'n/a')
-                worksheet.write((start_row*6)+2, col_init, 'n/a')
-                worksheet.write((start_row*6)+3, col_init, 'n/a')
-                worksheet.write((start_row*6)+4, col_init, 'n/a')
-                worksheet.write((start_row*6)+5, col_init, 'n/a')
-                worksheet.write((start_row*6)+6, col_init, 'n/a')
-                col_init +=1
-
-            # write data to worksheet_yoy
-            if (row[1] != 'n/a'):
-                worksheet_yoy.write_number((start_row*6)+1, col_init_yoy_num, int(row[1])) # 營收
-                worksheet_yoy.write_number((start_row*6)+2, col_init_yoy_num, int(row[3])) # 毛利
-                if (row[1] == '0' or row[1] == 0):
-                    worksheet_yoy.write_number((start_row*6)+3, col_init_yoy_num, 0) # 毛利率
-                    worksheet_yoy.write_number((start_row*6)+5, col_init_yoy_num, 0) # 營益率
-                else:
-                    worksheet_yoy.write((start_row*6)+3, col_init_yoy_num, float(row[3])/float(row[1])) # 毛利率
-                    worksheet_yoy.write((start_row*6)+5, col_init_yoy_num, float(row[5])/float(row[1])) # 營益率
-                worksheet_yoy.write_number((start_row*6)+4, col_init_yoy_num, int(row[5])) # 營益
-                worksheet_yoy.write((start_row*6)+6, col_init_yoy_num, float('%1.2f'%(float(row[5])/(float(row[9])/10)))) # 營益的EPS
-                count+=1
-                col_init_yoy_num = col_init_yoy + 4 * count 
-
-            else:
-                worksheet_yoy.write((start_row*6)+1, col_init_yoy_num, 'n/a')
-                worksheet_yoy.write((start_row*6)+2, col_init_yoy_num, 'n/a')
-                worksheet_yoy.write((start_row*6)+3, col_init_yoy_num, 'n/a')
-                worksheet_yoy.write((start_row*6)+4, col_init_yoy_num, 'n/a')
-                worksheet_yoy.write((start_row*6)+5, col_init_yoy_num, 'n/a')
-                worksheet_yoy.write((start_row*6)+6, col_init_yoy_num, 'n/a')
-                count+=1
-                col_init_yoy_num = col_init_yoy + 4 * count 
-
-            if (count >= QUARTER): #  end of this year, to next year
-                count = 0
-                col_init_yoy+=1
-                col_init_yoy_num = col_init_yoy + 4 * count 
-
-def process(market, name, total, count):
-    if(market == 'TSE'):
-        print "merge TSE data [%6s]..."%(name),
-    else:
-        print "merge OTC data [%6s]..."%(name),
-
-    print "%3d"%(count*100/total) + "%\r",
 
 def main():
-    global OUTPUT_CHART_FILE 
+
     global TOTAL_YEARS
-    stock_count  = 0
+    global Q4
 
-    print '***** Create TSE/OTC Earning Chart *****'
-    WorkingDirectory = os.getcwd()
-    today = datetime.today()
+    print("=== Generating %s Chart ==="%(OUTPUT_CHART_FILE))
+    print("Working directory: %s"%(WorkingDirectory))
+    ## load config
+    now = datetime.now()
+    year = now.year
+    month = now.month
+    year_range = range(year-TOTAL_YEARS, year)
 
-    # total files in both TSE/OTC
-    tse_files = sum(os.path.isfile(os.path.join('{}/'.format(TSE_RAW_DATA_FOLDER), f)) 
-                    for f in os.listdir('{}/'.format(TSE_RAW_DATA_FOLDER)))
-    otc_files = sum(os.path.isfile(os.path.join('{}/'.format(OTC_RAW_DATA_FOLDER), f)) 
-                    for f in os.listdir('{}/'.format(OTC_RAW_DATA_FOLDER)))
+    ## prepare output
+    spreadbook = xlsxwriter.Workbook(OUTPUT_CHART_FILE)
 
-    ### create worksheet style for earning data
-    # column lists
-    row_titles = [u'Stock', u'Item']
-    for year in range(TOTAL_YEARS-1,-1,-1):
-        row_titles.append('%s Q1'%(today.year-year))
-        row_titles.append('%s Q2'%(today.year-year))
-        row_titles.append('%s Q3'%(today.year-year))
-        row_titles.append('%s Q4'%(today.year-year))
-
-    row_titles_yoy = [u'Stock', u'Item']
-    for quarter in range(1,5):
-        for year in range(TOTAL_YEARS-1,-1,-1):
-            row_titles_yoy.append('%s Q%s'%(today.year-year, quarter))
-
-    # create uniform worksheets
-    spreadbook = xlsxwriter.Workbook('./{}'.format(OUTPUT_CHART_FILE))
-
-    title_format = spreadbook.add_format({
-    'bold':     True,
-    'border':   1,
-    'align':    'center',
-    'valign':   'vcenter',
-    'bg_color': '#cccccc',
-    })
-
-    merge_format_1 = spreadbook.add_format({
-    'border': 1,
-    'align': 'center',
-    'valign': 'vcenter',
-    'text_wrap': True,
-    'bg_color': '#777777',
-    })
-
-    merge_format_1a= spreadbook.add_format({
-    'border': 1,
-    'align': 'center',
-    'valign': 'vcenter',
-    'text_wrap': True,
-    'bg_color': '#777777',
-    'num_format': '0%',
-    })
-
-    merge_format_2 = spreadbook.add_format({
-    'border': 1,
-    'align': 'center',
-    'valign': 'vcenter',
-    'text_wrap': True,
-    'bg_color': '#cccccc',
-    })
-
-    merge_format_2a = spreadbook.add_format({
-    'border': 1,
-    'align': 'center',
-    'valign': 'vcenter',
-    'text_wrap': True,
-    'bg_color': '#cccccc',
-    'num_format': '0%',
-    })
-
-    hyperlink_format = spreadbook.add_format({
-    'border': 1,
-    'align': 'center',
-    'valign': 'vcenter',
-    'text_wrap': True,
-    'bg_color': '#777777',
-    'color': 'navy',
-    })
-
-    hyperlink_format_2 = spreadbook.add_format({
-    'border': 1,
-    'align': 'center',
-    'valign': 'vcenter',
-    'text_wrap': True,
-    'bg_color': '#cccccc',
-    'color': 'blue',
-    })
-
-    number_format = spreadbook.add_format({'num_format': '0.00'})
-
-    # open worksheet
-    tse_spreadsheet = spreadbook.add_worksheet('TSE')
-    tse_spreadsheet.freeze_panes(1, 2)
-    tse_spreadsheet.set_row(0, 15, title_format) # title format
-    tse_spreadsheet.write_row('A1', row_titles, title_format)
-    tse_spreadsheet.set_column(0, 1, 9) # A ~ B: set column width to 9 
-    tse_spreadsheet.set_column(2, TOTAL_YEARS*4+1, 11, number_format) # C ~ : set column width to 11 and number format #.##
-    tse_spreadsheet.merge_range(0,TOTAL_YEARS*4+3,0,TOTAL_YEARS*4+10, 'QoQ chart', title_format)
-    tse_spreadsheet.merge_range(0,TOTAL_YEARS*4+11,0,TOTAL_YEARS*4+15, u'毛利率', title_format)
-    tse_spreadsheet.merge_range(0,TOTAL_YEARS*4+16,0,TOTAL_YEARS*4+20, u'營益率', title_format)
-    tse_spreadsheet.merge_range(0,TOTAL_YEARS*4+21,0,TOTAL_YEARS*4+25, 'EPS', title_format)
-
-    tse_yoy_spreadsheet = spreadbook.add_worksheet('TSE-YOY')
-    tse_yoy_spreadsheet.freeze_panes(1, 2)
-    tse_yoy_spreadsheet.set_row(0, 15, title_format) # title format
-    tse_yoy_spreadsheet.write_row('A1', row_titles_yoy, title_format)
-    tse_yoy_spreadsheet.set_column(0, 1, 9) # A ~ B: set column width to 9
-    tse_yoy_spreadsheet.set_column(2, TOTAL_YEARS*4+1, 11, number_format) # C ~ : set column width to 11 and number format #.##
-
-    otc_spreadsheet = spreadbook.add_worksheet('OTC')
-    otc_spreadsheet.freeze_panes(1, 2)
-    otc_spreadsheet.set_row(0, 15, title_format) # title format
-    otc_spreadsheet.write_row('A1', row_titles, title_format)
-    otc_spreadsheet.set_column(0, 1, 9) # A ~ B: set column width to 9
-    otc_spreadsheet.set_column(2, TOTAL_YEARS*4+1, 11, number_format) # C ~ : set column width to 11 and number format #.##
-    otc_spreadsheet.merge_range(0,TOTAL_YEARS*4+3,0,TOTAL_YEARS*4+10, 'QoQ chart', title_format)
-    otc_spreadsheet.merge_range(0,TOTAL_YEARS*4+11,0,TOTAL_YEARS*4+15, u'毛利率', title_format)
-    otc_spreadsheet.merge_range(0,TOTAL_YEARS*4+16,0,TOTAL_YEARS*4+20, u'營益率', title_format)
-    otc_spreadsheet.merge_range(0,TOTAL_YEARS*4+21,0,TOTAL_YEARS*4+25, 'EPS', title_format)
-
-    otc_yoy_spreadsheet = spreadbook.add_worksheet('OTC-YOY')
-    otc_yoy_spreadsheet.freeze_panes(1, 2)
-    otc_yoy_spreadsheet.set_row(0, 15, title_format) # title format
-    otc_yoy_spreadsheet.write_row('A1', row_titles_yoy, title_format)
-    otc_yoy_spreadsheet.set_column(0, 1, 9) # A ~ B: set column width to 9
-    otc_yoy_spreadsheet.set_column(2, TOTAL_YEARS*4+1, 11, number_format) # C ~ : set column width to 11 and number format #.##
-
-    ### merge data
-    ## this is for TSE data
-    for filename in sorted(glob.glob("./{}/*.csv".format(TSE_RAW_DATA_FOLDER))):
-        (f_path, f_name) = os.path.split(filename)
-        (f_short_name, f_extension) = os.path.splitext(f_name)
-
-        with open('{}/{}.csv'.format(TSE_RAW_DATA_FOLDER, f_short_name), 'rb') as file:
-            reader = csv.reader(file)
-            for row in reader:
-                stock_name = u'%s(%s)'%(row[0].decode('utf-8').strip(" "),f_short_name)
-                hyperlink = u"=HYPERLINK(\"https://tw.stock.yahoo.com/d/s/company_{}.html\",\"{}\")".format(f_short_name, stock_name)
-                break
-        # format: excel table style & an alternative color for next ID
-        stock_count_row = stock_count * 6
-        color_format = spreadbook.add_format()
-        if (stock_count % 2) == 0:
-            color_format.set_bg_color('#777777')
-            color_format.set_border(1) 
-            # normal TSE
-            tse_spreadsheet.set_row((stock_count_row)+1, 18, merge_format_1)  #
-            tse_spreadsheet.set_row((stock_count_row)+2, 18, merge_format_1)  #
-            tse_spreadsheet.set_row((stock_count_row)+3, 18, merge_format_1a) #
-            tse_spreadsheet.set_row((stock_count_row)+4, 18, merge_format_1)  #
-            tse_spreadsheet.set_row((stock_count_row)+5, 18, merge_format_1a) #
-            tse_spreadsheet.set_row((stock_count_row)+6, 18, merge_format_1)  #
-            tse_spreadsheet.merge_range((stock_count_row)+1,0,(stock_count_row)+6,0, hyperlink, hyperlink_format)
-            # TSE for YOY 
-            tse_yoy_spreadsheet.set_row((stock_count_row)+1, 18, merge_format_1)  #
-            tse_yoy_spreadsheet.set_row((stock_count_row)+2, 18, merge_format_1)  #
-            tse_yoy_spreadsheet.set_row((stock_count_row)+3, 18, merge_format_1a) #
-            tse_yoy_spreadsheet.set_row((stock_count_row)+4, 18, merge_format_1)  #
-            tse_yoy_spreadsheet.set_row((stock_count_row)+5, 18, merge_format_1a) #
-            tse_yoy_spreadsheet.set_row((stock_count_row)+6, 18, merge_format_1)  #
-            tse_yoy_spreadsheet.merge_range((stock_count_row)+1,0,(stock_count_row)+6,0, hyperlink, hyperlink_format)
+    ## loop thru TSE, OTC
+    for market in ['TSE', 'OTC']:
+        # 產業別
+        sector = None
+        tse_otc_raw_data_folder = TSE_RAW_DATA_FOLDER if market == 'TSE' else OTC_RAW_DATA_FOLDER
+        files = glob.glob('%s/%s/%s*'%(WorkingDirectory, tse_otc_raw_data_folder, market))
+        if len(files) == 0:
+            print("No file found in %s"%(tse_otc_raw_data_folder))
+            continue
         else:
-            color_format.set_bg_color('#cccccc')
-            color_format.set_border(1) 
-            # normal TSE
-            tse_spreadsheet.set_row((stock_count_row)+1, 18, merge_format_2)  #
-            tse_spreadsheet.set_row((stock_count_row)+2, 18, merge_format_2)  #
-            tse_spreadsheet.set_row((stock_count_row)+3, 18, merge_format_2a) #
-            tse_spreadsheet.set_row((stock_count_row)+4, 18, merge_format_2)  #
-            tse_spreadsheet.set_row((stock_count_row)+5, 18, merge_format_2a) #
-            tse_spreadsheet.set_row((stock_count_row)+6, 18, merge_format_2)  #
-            tse_spreadsheet.merge_range((stock_count_row)+1,0,(stock_count_row)+6,0, hyperlink, hyperlink_format_2)
-            # TSE for YOY
-            tse_yoy_spreadsheet.set_row((stock_count_row)+1, 18, merge_format_2)  #
-            tse_yoy_spreadsheet.set_row((stock_count_row)+2, 18, merge_format_2)  #
-            tse_yoy_spreadsheet.set_row((stock_count_row)+3, 18, merge_format_2a) #
-            tse_yoy_spreadsheet.set_row((stock_count_row)+4, 18, merge_format_2)  #
-            tse_yoy_spreadsheet.set_row((stock_count_row)+5, 18, merge_format_2a) #
-            tse_yoy_spreadsheet.set_row((stock_count_row)+6, 18, merge_format_2)  #
-            tse_yoy_spreadsheet.merge_range((stock_count_row)+1,0,(stock_count_row)+6,0, hyperlink, hyperlink_format_2)
+            print("%d files found in %s"%(len(files), tse_otc_raw_data_folder))
 
-        tse_spreadsheet.write((stock_count_row)+1, 1, u"營收")
-        tse_spreadsheet.write((stock_count_row)+2, 1, u"毛利")
-        tse_spreadsheet.write((stock_count_row)+3, 1, u"毛利率")
-        tse_spreadsheet.write((stock_count_row)+4, 1, u"營益")
-        tse_spreadsheet.write((stock_count_row)+5, 1, u"營益率")
-        tse_spreadsheet.write((stock_count_row)+6, 1, u"EPS")
-        tse_yoy_spreadsheet.write((stock_count_row)+1, 1, u"營收")
-        tse_yoy_spreadsheet.write((stock_count_row)+2, 1, u"毛利")
-        tse_yoy_spreadsheet.write((stock_count_row)+3, 1, u"毛利率")
-        tse_yoy_spreadsheet.write((stock_count_row)+4, 1, u"營益")
-        tse_yoy_spreadsheet.write((stock_count_row)+5, 1, u"營益率")
-        tse_yoy_spreadsheet.write((stock_count_row)+6, 1, u"EPS")
+        # add worksheet
+        worksheet = spreadbook.add_worksheet(market)
+        row_count = 0
+        worksheet.write('A1', '年度')
+        worksheet.write('B1', '產業別')
+        worksheet.write('C1', '股票代號')
+        worksheet.write('D1', '公司名稱')
+        worksheet.write('E1', '日期')
+        worksheet.write('F1', '營收')
+        worksheet.write('G1', '毛利')
+        worksheet.write('H1', '毛利率')
+        worksheet.write('I1', '營益')
+        worksheet.write('J1', '營益率')
+        worksheet.write('K1', 'EPS')
 
-        # chart 
-        chart_trend('TSE', spreadbook, tse_spreadsheet, today.year-TOTAL_YEARS+1, stock_count_row)
+        stock_count_row = 1
 
-        # merge data
-        merge_data(tse_spreadsheet, tse_yoy_spreadsheet, f_name, today.year-TOTAL_YEARS+1, stock_count)
-        stock_count += 1
+        for filename in files:
+            #print("loading: %s"%(filename))
+            with open(filename, newline='', encoding='utf-8') as csvfile:
+                spamreader = csv.reader(csvfile, delimiter=',')
+                for i, row in enumerate(spamreader):
+                    if i == 0: # skip the first row
+                        continue
+                    # check if it is Q4
+                    if i == 1: # 檢查第一筆, 代表是否為Q4
+                        if row[0] == "Q4":
+                            Q4[market == 'TSE'] += 1
+                            print("Detect Q4 for %s, total %d"%(market, Q4[market == 'TSE']))
+                    stock_id = row[0]
+                    date = row[1].split("/")
+                    date = "%s%s%s"%(date[0], date[1], date[2])
+                    revenue = row[2]
+                    profit = row[3]
+                    profit_m = row[4]
+                    o_profit = row[5]
+                    o_profit_m = row[6]
+                    eps = row[7]
+                    if sector is None: # first item only
+                        sector = row[8]
+                    worksheet.write(stock_count_row, 0, year_range[len(files)-1])
+                    worksheet.write(stock_count_row, 1, sector)
+                    worksheet.write(stock_count_row, 2, stock_id)
+                    worksheet.write(stock_count_row, 3, row[9])
+                    worksheet.write(stock_count_row, 4, date)
+                    worksheet.write(stock_count_row, 5, float(revenue))
+                    worksheet.write(stock_count_row, 6, float(profit))
+                    worksheet.write(stock_count_row, 7, float(profit_m.strip('%'))/100)
+                    worksheet.write(stock_count_row, 8, float(o_profit))
+                    worksheet.write(stock_count_row, 9, float(o_profit_m.strip('%'))/100)
+                    worksheet.write(stock_count_row, 10, float(eps))
+                    stock_count_row += 1
 
-        process('TSE', f_short_name, tse_files, stock_count)
-
-    print ''
-
-    ## this is for OTC data
-    stock_count = 0
-    for filename in sorted(glob.glob("./{}/*.csv".format(OTC_RAW_DATA_FOLDER))):
-        (f_path, f_name) = os.path.split(filename)
-        (f_short_name, f_extension) = os.path.splitext(f_name)
- 
-        with open('{}/{}.csv'.format(OTC_RAW_DATA_FOLDER, f_short_name), 'rb') as file:
-            reader = csv.reader(file)
-            for row in reader:
-                stock_name = u'%s(%s)'%(row[0].decode('utf-8').strip(" "),f_short_name)
-                hyperlink = u"=HYPERLINK(\"https://tw.stock.yahoo.com/d/s/company_{}.html\",\"{}\")".format(f_short_name, stock_name)
-                break
-        # alternative color for stock ID
-        stock_count_row = stock_count * 6
-        color_format = spreadbook.add_format()
-        if (stock_count % 2) == 0:
-            color_format.set_bg_color('#777777')
-            color_format.set_border(1) 
-            otc_spreadsheet.set_row((stock_count_row)+1, 18, merge_format_1)  #
-            otc_spreadsheet.set_row((stock_count_row)+2, 18, merge_format_1)  #
-            otc_spreadsheet.set_row((stock_count_row)+3, 18, merge_format_1a) #
-            otc_spreadsheet.set_row((stock_count_row)+4, 18, merge_format_1)  #
-            otc_spreadsheet.set_row((stock_count_row)+5, 18, merge_format_1a) #
-            otc_spreadsheet.set_row((stock_count_row)+6, 18, merge_format_1)  #
-            otc_spreadsheet.merge_range((stock_count_row)+1,0,(stock_count_row)+6,0, hyperlink, hyperlink_format)
-            # OTC for YOY 
-            otc_yoy_spreadsheet.set_row((stock_count_row)+1, 18, merge_format_1)  #
-            otc_yoy_spreadsheet.set_row((stock_count_row)+2, 18, merge_format_1)  #
-            otc_yoy_spreadsheet.set_row((stock_count_row)+3, 18, merge_format_1a) #
-            otc_yoy_spreadsheet.set_row((stock_count_row)+4, 18, merge_format_1)  #
-            otc_yoy_spreadsheet.set_row((stock_count_row)+5, 18, merge_format_1a) #
-            otc_yoy_spreadsheet.set_row((stock_count_row)+6, 18, merge_format_1)  #
-            otc_yoy_spreadsheet.merge_range((stock_count_row)+1,0,(stock_count_row)+6,0, hyperlink, hyperlink_format)
-        else:
-            color_format.set_bg_color('#cccccc')
-            color_format.set_border(1) 
-            otc_spreadsheet.set_row((stock_count_row)+1, 18, merge_format_2)  #
-            otc_spreadsheet.set_row((stock_count_row)+2, 18, merge_format_2)  #
-            otc_spreadsheet.set_row((stock_count_row)+3, 18, merge_format_2a) #
-            otc_spreadsheet.set_row((stock_count_row)+4, 18, merge_format_2)  #
-            otc_spreadsheet.set_row((stock_count_row)+5, 18, merge_format_2a) #
-            otc_spreadsheet.set_row((stock_count_row)+6, 18, merge_format_2)  #
-            otc_spreadsheet.merge_range((stock_count_row)+1,0,(stock_count_row)+6,0, hyperlink, hyperlink_format_2)
-            # OTC for YOY 
-            otc_yoy_spreadsheet.set_row((stock_count_row)+1, 18, merge_format_2)  #
-            otc_yoy_spreadsheet.set_row((stock_count_row)+2, 18, merge_format_2)  #
-            otc_yoy_spreadsheet.set_row((stock_count_row)+3, 18, merge_format_2a) #
-            otc_yoy_spreadsheet.set_row((stock_count_row)+4, 18, merge_format_2)  #
-            otc_yoy_spreadsheet.set_row((stock_count_row)+5, 18, merge_format_2a) #
-            otc_yoy_spreadsheet.set_row((stock_count_row)+6, 18, merge_format_2)  #
-            otc_yoy_spreadsheet.merge_range((stock_count_row)+1,0,(stock_count_row)+6,0, hyperlink, hyperlink_format_2)
-
-        otc_spreadsheet.write((stock_count_row)+1, 1, u"營收")
-        otc_spreadsheet.write((stock_count_row)+2, 1, u"毛利")
-        otc_spreadsheet.write((stock_count_row)+3, 1, u"毛利率")
-        otc_spreadsheet.write((stock_count_row)+4, 1, u"營益")
-        otc_spreadsheet.write((stock_count_row)+5, 1, u"營益率")
-        otc_spreadsheet.write((stock_count_row)+6, 1, u"EPS")
-        otc_yoy_spreadsheet.write((stock_count_row)+1, 1, u"營收")
-        otc_yoy_spreadsheet.write((stock_count_row)+2, 1, u"毛利")
-        otc_yoy_spreadsheet.write((stock_count_row)+3, 1, u"毛利率")
-        otc_yoy_spreadsheet.write((stock_count_row)+4, 1, u"營益")
-        otc_yoy_spreadsheet.write((stock_count_row)+5, 1, u"營益率")
-        otc_yoy_spreadsheet.write((stock_count_row)+6, 1, u"EPS")
-
-        # chart 
-        chart_trend('OTC', spreadbook, otc_spreadsheet, today.year-TOTAL_YEARS+1, stock_count_row)
-
-        # merge data
-        merge_data(otc_spreadsheet, otc_yoy_spreadsheet, f_name, today.year-TOTAL_YEARS+1, stock_count)
-        stock_count += 1
-
-        process('OTC', f_short_name, otc_files, stock_count)
-  
-    print ''
-    print 'export excel : %s \r'%(OUTPUT_CHART_FILE)
+        TOTAL_DAYS = stock_count_row
+        print("TOTAL_DAYS = %d"%(TOTAL_DAYS))
+        formula(worksheet)
+        chart_trend(market, spreadbook, worksheet, year_range[len(files)-1], stock_count_row)
 
     spreadbook.close()
 
-    print 'done \r',
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
+

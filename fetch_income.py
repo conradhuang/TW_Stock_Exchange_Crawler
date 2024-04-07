@@ -30,22 +30,21 @@ class Crawler():
         self.monthly_files = monthly_files
 
     def process(self, date, total, count):
-        print date + "...",
-        print "%3d"%(count*100/total) + "%\r",
+        print(date + "...", end="")
+        print("{:3d}%\r".format(count*100//total), end="")
 
     def _clean_row(self, row):
         ''' Clean comma and spaces '''
         for index, content in enumerate(row):
             row[index] = re.sub(",", "", content.strip())
-            row[index] = filter(lambda x: x in string.printable, row[index])
+            row[index] = ''.join(filter(lambda x: x in string.printable, row[index]))
         return row
 
     def _monthly_record(self, stock_id, row):
         ''' Save row to csv file '''
-        f = open('{}/{}.csv'.format(self.prefix_monthly, stock_id), 'ab')
-        cw = csv.writer(f, lineterminator='\r\n')
-        cw.writerow(row)
-        f.close()
+        with open('{}/{}.csv'.format(self.prefix_monthly, stock_id), 'ab') as f:
+            cw = csv.writer(f, lineterminator='\r\n')
+            cw.writerow(row)
 
     def _get_monthly_data(self, date_str_w):
         process_count = 0
@@ -67,7 +66,7 @@ class Crawler():
             page = requests.get(url)
             page.encoding = 'big5'
  
-            #print page.text.encode('utf-8')
+            #print(page.text.encode('utf-8'))
 
             if not page.ok:
                 logging.error("Can not get {} data at {}".format(url_name, date_str_w))
@@ -77,7 +76,7 @@ class Crawler():
             tree = html.fromstring(page.text)
  
             if not (tree.xpath('//table[@bgcolor="#FFFFFF"]/tr')):
-                print date_str_w + url_name + "... none"
+                print(date_str_w + url_name + "... none")
             else:
                 for tr in tree.xpath('//table[@bgcolor="#FFFFFF"]/tr'):
                     tds = tr.xpath('td/text()')
@@ -110,8 +109,8 @@ class Crawler():
                         process_count += 1
                         self.process(date_str_w, self.monthly_files, process_count)
 
-	    time.sleep(5)  # prevent blocked by remote server
-        print ''
+        time.sleep(5)  # prevent blocked by remote server
+        print('')
 
         # 未公佈月營收個股
         for filename in sorted(glob.glob("./{}/*.csv".format(self.prefix_monthly))):
@@ -119,13 +118,13 @@ class Crawler():
             (f_short_name, f_extension) = os.path.splitext(f_name)
 
             if f_short_name not in stock_have_data:
-                with open('{}/{}.csv'.format(self.prefix_monthly, f_short_name), 'rb') as file:
+                with open('{}/{}.csv'.format(self.prefix_monthly, f_short_name), 'r') as file:
                     reader = csv.reader(file)
                     for row in reader:
                         row[0] = ''.join(row[0].split()) # remove spaces
                         stock_no = '[{:>6}]'.format(f_short_name) # right-aligned with 6 spaces
-                        stock_name = u'查無 {} 營收資料: {:<8} {}'.format(date_str_w, stock_no, row[0].decode('utf-8'))
-                        print stock_name.encode('utf-8')
+                        stock_name = u'查無 {} 營收資料: {:<8} {}'.format(date_str_w, stock_no, row[0])
+                        print(stock_name.encode('utf-8'))
                         break
 
     def table_init(self, year, month, day):
@@ -171,18 +170,15 @@ class Crawler():
                 stock_name = tds[1]
                 stock_info = [stock_name.encode('utf-8'),'\t%s'%(stock_id)] 
  
-                f = file('{}/{}.csv'.format(self.prefix_monthly, stock_id), 'wb')
-                f.write(codecs.BOM_UTF8)
-                
-                cw = csv.writer(f, lineterminator='\r\n')
-                cw.writerow(stock_info)
-                cw.writerow(headers)
-                f.close()
+                with open('{}/{}.csv'.format(self.prefix_monthly, stock_id), 'wb') as f:
+                    f.write(codecs.BOM_UTF8)
+                    
+                    cw = csv.writer(f, lineterminator='\r\n')
+                    cw.writerow(stock_info)
+                    cw.writerow(headers)
                 process_count += 1
-                print '%s table counts: %6d\r'%(url_name, process_count),
-            print ''    
-
-        print "done!"        
+                print('%s table counts: %6d\r'%(url_name, process_count), end="")
+        print('')        
 
         os.system('sh rm_monthly.sh')
 
@@ -231,29 +227,28 @@ class Crawler():
                     continue
 
                 if not (os.path.isfile('{}/{}.csv'.format(self.prefix_monthly, stock_id))):
-                    f = file('{}/{}.csv'.format(self.prefix_monthly, stock_id), 'wb')
-                    f.write(codecs.BOM_UTF8)
+                    with open('{}/{}.csv'.format(self.prefix_monthly, stock_id), 'wb') as f:
+                        f.write(codecs.BOM_UTF8)
 
-                    cw = csv.writer(f, lineterminator='\r\n')
-                    cw.writerow(stock_info)
-                    cw.writerow(headers)
-                    f.close()
+                        cw = csv.writer(f, lineterminator='\r\n')
+                        cw.writerow(stock_info)
+                        cw.writerow(headers)
                     process_count += 1
-                    print 'add new %s stock [%s] %s \r'%(url_name, stock_id, stock_name.encode('utf-8'))
+                    print('add new %s stock [%s] %s \r'%(url_name, stock_id, stock_name.encode('utf-8')), end="")
 
-        print ''
-        print 'Check new stock is not warrants or ETF type... \r'
+        print('')
+        print('Check new stock is not warrants or ETF type... \r')
         os.system('sh rm_monthly.sh')
 
     def get_data(self, year, month):
         date_str_c = '{0}/{1:02d}'.format(year - 1911, month)   # 20xx/xx
         date_str_w = '{0}/{1:02d}'.format(year,month)           # 10x/xx
-        #print 'Crawling {}'.format(date_str)
-        #print format(date_str),
+        #print('Crawling {}'.format(date_str))
+        #print(format(date_str), end="")
         self._get_monthly_data(date_str_w)
 
 def get_last_date():
-    with open('./monthly_raw_data/1101.csv', 'rb') as file:
+    with open('./monthly_raw_data/1101.csv', 'r') as file:
         reader = csv.reader(file)
         rows = 0
         for row in reader:
@@ -294,12 +289,12 @@ def main():
 
     # If back flag is on, crawl till Jan. 2013, else crawl one month
     if args.back:
-        print 'Crawling TSE/OTC monthly revenue...'
+        print('Crawling TSE/OTC monthly revenue...')
 
         last_day = datetime(2013, 1, 15)
         max_error = 3 
         error_times = 0
-        print 'last_day @', last_day
+        print('last_day @', last_day)
 
         # TWSE announce monthlyi-revenue on every 15th day of month,
         # use this as dummy data and prevent data is not updated on TWSE
@@ -321,19 +316,19 @@ def main():
                 #first_day -= relativedelta(months=1) #from now to past
                 last_day += relativedelta(months=1) #from past till now
     elif args.init:
-        print 'TSE/OTC table init ...'
+        print('TSE/OTC table init ...')
         date = first_day - timedelta(1)
         crawler.table_init(date.year, date.month, date.day)
     else:
-        print 'Checking is there a new stock...'
+        print('Checking is there a new stock...')
         weekend = first_day.weekday()
         if weekend < 5:
             date = first_day
         else:
             date = first_day - timedelta(weekend % 4)
         crawler.check_new_stock(date.year, date.month, date.day)
-        print ''
-        print 'Crawling TSE/OTC monthly revenue...'
+        print('')
+        print('Crawling TSE/OTC monthly revenue...')
         if len(args.day) == 0:
             # auto update data till this month 
             # get the last data date from stock '1101'
@@ -352,9 +347,9 @@ def main():
 
             # start fetching data
             if last_day.strftime('%Y/%m') == first_day.strftime('%Y/%m'):
-                print 'your data is up-to-date'
+                print('your data is up-to-date')
             else:
-                print 'updating data from '+last_day.strftime('%Y/%m')+' to '+update_data_to.strftime('%Y/%m')+'...'
+                print('updating data from '+last_day.strftime('%Y/%m')+' to '+update_data_to.strftime('%Y/%m')+'...')
                 max_error = 5
                 error_times = 0
                 last_day = last_day + relativedelta(months=1)
@@ -369,10 +364,7 @@ def main():
                         continue
                     finally:
                         last_day += relativedelta(months=1) #from past till now
-			time.sleep(10)  # prevent blocked by remote server
-                print 'done'
-                print ''
-                os.system('python -u create_monthly_chart.py')
+            time.sleep(10)  # prevent blocked by remote server
         elif len(args.day) == 2:
             # update to specific day: python fetch_tse.py tse year mm dd
             crawler.get_data(first_day.year, first_day.month)

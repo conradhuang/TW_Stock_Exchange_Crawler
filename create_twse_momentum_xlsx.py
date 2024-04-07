@@ -123,7 +123,7 @@ def chart_openpyxl(worksheet):
 
     global TOTAL_DAYS
 
-    print 'generate Chart...'
+    print('generate Chart...')
     # create open-high-low-close chart 
     stock = StockChart()
     dates = Reference(worksheet, min_col=1, min_row=31, max_row=TOTAL_DAYS+1)
@@ -175,7 +175,7 @@ def merge_data(worksheet):
     row_init = 1 
     csv_rows_tmp = []
 
-    spamReader = csv.reader(open('{}.csv'.format(RAW_DATA_FILE), 'rb'), delimiter=',',quotechar='"')
+    spamReader = csv.reader(open('{}.csv'.format(RAW_DATA_FILE), 'r', newline=''), delimiter=',',quotechar='"')
     # read data to memory and filter out invalid data
     count = 0
     for row in spamReader:
@@ -210,24 +210,24 @@ def merge_data(worksheet):
             worksheet.write(row_init, 4, new_close)
             row_init +=1
 
-            print "copy data @ " + "%10s...\r"%row[0],
+            print("copy data @ " + "%10s...\r"%row[0])
 
-    print ''
+    print('')
 
 def process(name, total, count):
-    print "create table [%6s]..."%(name),
-    print "%3d"%(count*100/total) + "%\r",
+    print("create table [%6s]..."%(name)),
+    print("%3d"%(count*100/total) + "%\r")
 
 def main():
     global titles
     global RAW_DATA_FILE
 
-    print '***** Create TWSE Momentum Chart *****'
+    print('***** Create TWSE Momentum Chart *****')
     WorkingDirectory = os.getcwd()
 
     #create stocks worksheet
 
-#        print '%6s'%(f_short_name) + " creating table...",
+#        print('%6s'%(f_short_name) + " creating table..."),
 
     # create uniform worksheets
     spreadbook = xlsxwriter.Workbook('./{}'.format(FILE_NAME))
@@ -261,6 +261,8 @@ def main():
     chart_openpyxl(ws)
     wb.save(FILE_NAME)
     
-    print 'done \r',
+    print('done \r')
+
 if __name__ == '__main__':
     main()
+

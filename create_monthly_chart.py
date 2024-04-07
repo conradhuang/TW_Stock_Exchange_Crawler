@@ -99,14 +99,14 @@ def merge_data(worksheet, f_name, date_start, start_row):
     ma_offset = 0
 
     (f_short_name, f_extension) = os.path.splitext(f_name)
-    spamReader = csv.reader(open('{}/{}'.format(MONTHLY_RAW_DATA_FOLDER, f_name), 'rb'), delimiter=',',quotechar='"')
+    with open('{}/{}'.format(MONTHLY_RAW_DATA_FOLDER, f_name), 'r', newline='') as file:
+        spamReader = csv.reader(file, delimiter=',',quotechar='"')
 
-
-    ## read data to memory and filter out invalid data
-    for row in spamReader:
-        count += 1
-        if count > 2:   #row 1 and 2 are headers, ignore it
-            csv_rows_tmp.append(row)
+        ## read data to memory and filter out invalid data
+        for row in spamReader:
+            count += 1
+            if count > 2:   #row 1 and 2 are headers, ignore it
+                csv_rows_tmp.append(row)
 
     ## write data to worksheet
     count = 0   # reset count
@@ -159,11 +159,11 @@ def merge_data(worksheet, f_name, date_start, start_row):
                 ma_tmp[(col_init-2)%MA] = int(0)
 
 def process(name, total, count):
-    print "fetching data [%6s]..."%(name),
-    print "%3d"%(count*100/total) + "%\r",
+    print("fetching data [%6s]..."%(name), end="")
+    print("%3d"%(count*100/total) + "%\r", end="")
 
 def get_last_date():
-    with open('./monthly_raw_data/1101.csv', 'rb') as file:
+    with open('./monthly_raw_data/1101.csv', 'r', newline='') as file:
         reader = csv.reader(file)
         rows = 0
         for row in reader:
@@ -176,7 +176,7 @@ def main():
     global TOTAL_YEARS
     stock_count  = 0
 
-    print '***** Create TSE/OTC Monthly-Revenue Chart *****'
+    print('***** Create TSE/OTC Monthly-Revenue Chart *****')
     WorkingDirectory = os.getcwd()
     today = datetime.today()
 
@@ -275,10 +275,10 @@ def main():
         (f_path, f_name) = os.path.split(filename)
         (f_short_name, f_extension) = os.path.splitext(f_name)
 
-        with open('{}/{}.csv'.format(MONTHLY_RAW_DATA_FOLDER, f_short_name), 'rb') as file:
+        with open('{}/{}.csv'.format(MONTHLY_RAW_DATA_FOLDER, f_short_name), 'r', newline='') as file:
             reader = csv.reader(file)
             for row in reader:
-                stock_name = u'%s(%s)'%(row[0].decode('utf-8').strip(" "),f_short_name)
+                stock_name = u'%s(%s)'%(row[0].strip(" "),f_short_name)
                 hyperlink = u"=HYPERLINK(\"https://tw.stock.yahoo.com/d/s/company_{}.html\",\"{}\")".format(f_short_name, stock_name)
                 break
         # format: excel table style & an alternative color for next ID
@@ -320,12 +320,13 @@ def main():
 
         process(f_short_name, total_files, stock_count)
 
-    print ''
-    print 'export excel : %s \r'%(OUTPUT_CHART_FILE)
+    print('')
+    print('export excel : %s'%(OUTPUT_CHART_FILE))
 
     spreadbook.close()
 
-    print 'done!'
+    print('done!')
 
 if __name__ == '__main__':
     main()
+
